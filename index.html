@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="description" content="Simple offline-capable currency converter" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="EasyConvert" />
+  <title>EasyConvert</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8f9fb;
+      --surface: #ffffff;
+      --surface2: #f0f2f5;
+      --border: #e2e6ed;
+      --text: #1a1c23;
+      --text2: #6b7280;
+      --accent: #4f46e5;
+      --accent-light: #eef2ff;
+      --accent-dark: #3730a3;
+      --danger: #ef4444;
+      --success: #10b981;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1117;
+        --surface: #1c1e2a;
+        --surface2: #252836;
+        --border: #2e3244;
+        --text: #e8eaf0;
+        --text2: #8b92a8;
+        --accent: #6366f1;
+        --accent-light: #1e1f3b;
+        --accent-dark: #818cf8;
+        --shadow: 0 2px 12px rgba(0,0,0,0.4);
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .nav-tab {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.18s;
+      background: transparent;
+      color: var(--text2);
+    }
+
+    .nav-tab.active {
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    /* PAGES */
+    .page { display: none; flex-direction: column; flex: 1; }
+    .page.active { display: flex; }
+
+    main {
+      flex: 1;
+      padding: 24px 20px;
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* CARD */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .card-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text2);
+      margin-bottom: 12px;
+    }
+
+    /* SETUP SCREEN */
+    #setup-screen {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .currency-pair {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .currency-input-wrap {
+      flex: 1;
+    }
+
+    .currency-label {
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      background: var(--surface2);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.18s;
+      -webkit-appearance: none;
+    }
+
+    input[type="text"]:focus, input[type="number"]:focus {
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+
+    input[type="text"].currency-code {
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .swap-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 18px;
+      transition: all 0.18s;
+      color: var(--accent);
+      font-size: 18px;
+    }
+
+    .swap-btn:active { transform: scale(0.9); }
+
+    .rate-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .rate-eq {
+      font-size: 14px;
+      color: var(--text2);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.18s;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%;
+    }
+    .btn-primary:active { background: var(--accent-dark); transform: scale(0.99); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 1.5px solid var(--accent);
+      width: 100%;
+    }
+    .btn-outline:active { background: var(--accent-light); }
+
+    .btn-danger-outline {
+      background: transparent;
+      color: var(--danger);
+      border: 1.5px solid var(--danger);
+      width: 100%;
+    }
+    .btn-danger-outline:active { opacity: 0.7; }
+
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    /* CONVERT PAGE */
+    .convert-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .pair-display {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .pair-rate {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    .result-box {
+      background: var(--accent-light);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      text-align: center;
+      margin-top: 16px;
+      border: 1px solid transparent;
+    }
+
+    .result-label {
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .result-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -1px;
+      line-height: 1.1;
+    }
+
+    .result-currency {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text2);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .empty-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .empty-sub {
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    /* INFO PAGE */
+    .info-section {
+      margin-bottom: 16px;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .info-row:last-child { border-bottom: none; }
+
+    .info-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .info-text-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .info-text-sub {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+
+    .app-hero {
+      text-align: center;
+      padding: 32px 0 8px;
+    }
+
+    .app-icon-big {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      background: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin-bottom: 14px;
+    }
+
+    .app-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .app-version {
+      font-size: 13px;
+      color: var(--text2);
+    }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1a1c23;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* INSTALL STEPS */
+    .install-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .install-step:last-of-type { border-bottom: none; }
+    .step-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-text {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .step-text strong { color: var(--text); font-weight: 600; }
+    .install-note {
+      margin-top: 14px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.5;
+      border-left: 3px solid var(--accent);
+    }
+
+    /* INSTALL BANNER */
+    #install-banner {
+      display: none;
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 20px;
+      font-size: 14px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    #install-banner.visible { display: flex; }
+
+    #install-banner button {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #dismiss-install {
+      background: none !important;
+      padding: 4px !important;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Install Banner -->
+  <div id="install-banner">
+    <span>📲 Install EasyConvert</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button id="install-btn">Install</button>
+      <button id="dismiss-install">✕</button>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <span class="nav-title">💱 EasyConvert</span>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-page="convert">Convert</button>
+      <button class="nav-tab" data-page="info">Info</button>
+    </div>
+  </nav>
+
+  <!-- CONVERT PAGE -->
+  <div class="page active" id="page-convert">
+    <main>
+
+      <!-- Setup: no rate saved -->
+      <div id="setup-screen">
+        <div class="card">
+          <div class="card-label">Currency pair</div>
+          <div class="currency-pair">
+            <div class="currency-input-wrap">
+              <div class="currency-label">From</div>
+              <input type="text" id="from-currency" class="currency-code" maxlength="4" placeholder="USD" />
+            </div>
+            <button class="swap-btn" id="swap-btn" title="Swap currencies">⇄</button>
+            <div class="currency-input-wrap">
+              <div class="currency-label">To</div>
+              <input type="text" id="to-currency" class="currency-code" maxlength="4" placeholder="EUR" />
+            </div>
+          </div>
+          <div class="card-label">Exchange rate</div>
+          <div class="rate-row">
+            <span class="rate-eq">1 <span id="from-label-rate">FROM</span> =</span>
+            <input type="number" id="rate-input" placeholder="0.00" step="any" min="0" />
+            <span class="rate-eq" id="to-label-rate" style="min-width:40px;">TO</span>
+          </div>
+          <button class="btn btn-primary" id="save-rate-btn">Save rate &amp; start</button>
+        </div>
+      </div>
+
+      <!-- Converter: rate is set -->
+      <div id="converter-screen" style="display:none;">
+        <div class="card">
+          <div class="convert-header">
+            <div>
+              <div class="pair-display" id="pair-display">USD → EUR</div>
+              <div class="pair-rate" id="pair-rate-display">1 USD = 0.92 EUR</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-outline btn-sm" id="converter-swap-btn" title="Swap">⇄</button>
+              <button class="btn btn-danger-outline btn-sm" id="new-rate-btn">New</button>
+            </div>
+          </div>
+
+          <div class="card-label">Amount to convert</div>
+          <input type="number" id="amount-input" placeholder="Enter amount…" step="any" min="0" style="margin-bottom:14px;" />
+          <button class="btn btn-primary" id="convert-btn">Convert</button>
+        </div>
+
+        <div id="result-box" class="result-box" style="display:none;">
+          <div class="result-label" id="result-label">Result</div>
+          <div class="result-value" id="result-value">0.00</div>
+          <div class="result-currency" id="result-currency">EUR</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- INFO PAGE -->
+  <div class="page" id="page-info">
+    <main>
+      <div class="app-hero">
+        <div class="app-icon-big">💱</div>
+        <div class="app-name">EasyConvert</div>
+        <div class="app-version">Version 1.0 · 2026</div>
+      </div>
+
+      <div class="card info-section">
+        <div class="info-row">
+          <div class="info-icon">📴</div>
+          <div>
+            <div class="info-text-title">Works offline</div>
+            <div class="info-text-sub">All data is stored on your device. No internet connection required after the first load.</div>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon">💾</div>
+          <div>
+            <div class="info-text-title">Rate saved automatically</div>
+            <div class="info-text-sub">Your exchange rate is remembered between sessions. Tap "New" to update it.</div>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon">📲</div>
+          <div>
+            <div class="info-text-title">Install as app</div>
+            <div class="info-text-sub">Add to your home screen for a native app experience — works on Android and iOS.</div>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon">⇄</div>
+          <div>
+            <div class="info-text-title">Swap currencies</div>
+            <div class="info-text-sub">Tap the swap button to instantly flip the conversion direction.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Install instructions -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-label">Install on your phone</div>
+
+        <!-- Tab switcher -->
+        <div style="display:flex;gap:8px;margin-bottom:18px;">
+          <button class="install-tab active" data-os="android" style="flex:1;padding:9px;border-radius:var(--radius-sm);border:1.5px solid var(--accent);background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.18s;">
+            Android
+          </button>
+          <button class="install-tab" data-os="ios" style="flex:1;padding:9px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.18s;">
+            iPhone / iPad
+          </button>
+        </div>
+
+        <!-- Android steps -->
+        <div id="steps-android">
+          <div class="install-step">
+            <div class="step-num">1</div>
+            <div class="step-text">Open this page in <strong>Chrome</strong> on your Android device.</div>
+          </div>
+          <div class="install-step">
+            <div class="step-num">2</div>
+            <div class="step-text">Tap the <strong>⋮ menu</strong> (three dots) in the top-right corner of Chrome.</div>
+          </div>
+          <div class="install-step">
+            <div class="step-num">3</div>
+            <div class="step-text">Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong> from the menu.</div>
+          </div>
+          <div class="install-step">
+            <div class="step-num">4</div>
+            <div class="step-text">Confirm by tapping <strong>"Add"</strong> or <strong>"Install"</strong>. The app icon will appear on your home screen.</div>
+          </div>
+          <div class="install-note">
+            💡 A banner may also appear automatically at the bottom of the screen — tap it to install directly.
+          </div>
+        </div>
+
+        <!-- iOS steps -->
+        <div id="steps-ios" style="display:none;">
+          <div class="install-step">
+            <div class="step-num">1</div>
+            <div class="step-text">Open this page in <strong>Safari</strong> on your iPhone or iPad.</div>
+          </div>
+          <div class="install-step">
+            <div class="step-num">2</div>
+            <div class="step-text">Tap the <strong>Share button</strong> (the square with an arrow pointing up) at the bottom of Safari.</div>
+          </div>
+          <div class="install-step">
+            <div class="step-num">3</div>
+            <div class="step-text">Scroll down in the share sheet and tap <strong>"Add to Home Screen"</strong>.</div>
+          </div>
+          <div class="install-step">
+            <div class="step-num">4</div>
+            <div class="step-text">Tap <strong>"Add"</strong> in the top-right corner. The app icon will appear on your home screen.</div>
+          </div>
+          <div class="install-note">
+            💡 The app must be opened in Safari — Chrome and other browsers on iOS do not support "Add to Home Screen" as a PWA.
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="text-align:center;padding:24px;">
+        <div style="font-size:13px;color:var(--text2);line-height:1.7;">
+          Developed by <strong style="color:var(--text);">Daniele Proverbio</strong>, 2026<br />
+          Open source · Built as a Progressive Web App
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <script>
+    // ── Storage ──────────────────────────────────────────────────────────────
+    const STORAGE_KEY = 'currency-converter-v1';
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch { return null; }
+    }
+
+    function saveData(data) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+    }
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    let state = {
+      from: '',
+      to: '',
+      rate: null
+    };
+
+    // ── Elements ──────────────────────────────────────────────────────────────
+    const setupScreen     = document.getElementById('setup-screen');
+    const converterScreen = document.getElementById('converter-screen');
+    const fromCurrency    = document.getElementById('from-currency');
+    const toCurrency      = document.getElementById('to-currency');
+    const rateInput       = document.getElementById('rate-input');
+    const fromLabelRate   = document.getElementById('from-label-rate');
+    const toLabelRate     = document.getElementById('to-label-rate');
+    const saveRateBtn     = document.getElementById('save-rate-btn');
+    const swapBtn         = document.getElementById('swap-btn');
+    const converterSwap   = document.getElementById('converter-swap-btn');
+    const newRateBtn      = document.getElementById('new-rate-btn');
+    const pairDisplay     = document.getElementById('pair-display');
+    const pairRateDisplay = document.getElementById('pair-rate-display');
+    const amountInput     = document.getElementById('amount-input');
+    const convertBtn      = document.getElementById('convert-btn');
+    const resultBox       = document.getElementById('result-box');
+    const resultLabel     = document.getElementById('result-label');
+    const resultValue     = document.getElementById('result-value');
+    const resultCurrency  = document.getElementById('result-currency');
+    const toast           = document.getElementById('toast');
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    let toastTimeout;
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    // ── UI helpers ────────────────────────────────────────────────────────────
+    function formatAmount(num) {
+      if (Number.isInteger(num)) return num.toLocaleString();
+      const fixed = parseFloat(num.toFixed(6));
+      return fixed.toLocaleString(undefined, { maximumFractionDigits: 6 });
+    }
+
+    function updateRateLabels() {
+      const f = fromCurrency.value.trim().toUpperCase() || 'FROM';
+      const t = toCurrency.value.trim().toUpperCase() || 'TO';
+      fromLabelRate.textContent = f;
+      toLabelRate.textContent = t;
+    }
+
+    fromCurrency.addEventListener('input', updateRateLabels);
+    toCurrency.addEventListener('input', updateRateLabels);
+
+    function showConverter() {
+      setupScreen.style.display = 'none';
+      converterScreen.style.display = '';
+      const f = state.from.toUpperCase();
+      const t = state.to.toUpperCase();
+      pairDisplay.textContent = `${f} → ${t}`;
+      pairRateDisplay.textContent = `1 ${f} = ${formatAmount(state.rate)} ${t}`;
+      resultBox.style.display = 'none';
+      amountInput.value = '';
+    }
+
+    function showSetup() {
+      setupScreen.style.display = '';
+      converterScreen.style.display = 'none';
+      fromCurrency.value = state.from || '';
+      toCurrency.value   = state.to   || '';
+      rateInput.value    = state.rate || '';
+      updateRateLabels();
+    }
+
+    // ── Save rate ─────────────────────────────────────────────────────────────
+    saveRateBtn.addEventListener('click', () => {
+      const f = fromCurrency.value.trim().toUpperCase();
+      const t = toCurrency.value.trim().toUpperCase();
+      const r = parseFloat(rateInput.value);
+      if (!f || !t) { showToast('Enter both currency codes'); return; }
+      if (!r || r <= 0) { showToast('Enter a valid rate > 0'); return; }
+      state = { from: f, to: t, rate: r };
+      saveData(state);
+      showConverter();
+      showToast('Rate saved ✓');
+    });
+
+    // ── Swap (setup screen) ───────────────────────────────────────────────────
+    swapBtn.addEventListener('click', () => {
+      const f = fromCurrency.value;
+      fromCurrency.value = toCurrency.value;
+      toCurrency.value = f;
+      if (rateInput.value && parseFloat(rateInput.value) > 0) {
+        rateInput.value = (1 / parseFloat(rateInput.value)).toFixed(6);
+      }
+      updateRateLabels();
+    });
+
+    // ── Swap (converter screen) ───────────────────────────────────────────────
+    converterSwap.addEventListener('click', () => {
+      const newRate = 1 / state.rate;
+      state = { from: state.to, to: state.from, rate: newRate };
+      saveData(state);
+      showConverter();
+      showToast(`Swapped: ${state.from} → ${state.to}`);
+    });
+
+    // ── New rate button ───────────────────────────────────────────────────────
+    newRateBtn.addEventListener('click', () => {
+      showSetup();
+    });
+
+    // ── Convert ───────────────────────────────────────────────────────────────
+    convertBtn.addEventListener('click', doConvert);
+    amountInput.addEventListener('keydown', e => { if (e.key === 'Enter') doConvert(); });
+
+    function doConvert() {
+      const amount = parseFloat(amountInput.value);
+      if (!amount || amount <= 0) { showToast('Enter an amount to convert'); return; }
+      const converted = amount * state.rate;
+      resultLabel.textContent = `${formatAmount(amount)} ${state.from.toUpperCase()} =`;
+      resultValue.textContent = formatAmount(converted);
+      resultCurrency.textContent = state.to.toUpperCase();
+      resultBox.style.display = '';
+      resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // ── Page navigation ───────────────────────────────────────────────────────
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('page-' + tab.dataset.page).classList.add('active');
+      });
+    });
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    function init() {
+      const saved = loadData();
+      if (saved && saved.from && saved.to && saved.rate > 0) {
+        state = saved;
+        showConverter();
+      } else {
+        showSetup();
+        updateRateLabels();
+      }
+    }
+
+    init();
+
+    // ── PWA Install prompt ────────────────────────────────────────────────────
+    let deferredPrompt = null;
+    const installBanner = document.getElementById('install-banner');
+    const installBtn    = document.getElementById('install-btn');
+    const dismissBtn    = document.getElementById('dismiss-install');
+
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBanner.classList.add('visible');
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBanner.classList.remove('visible');
+    });
+
+    dismissBtn.addEventListener('click', () => {
+      installBanner.classList.remove('visible');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installBanner.classList.remove('visible');
+      showToast('App installed ✓');
+    });
+
+    // ── Install OS tabs ───────────────────────────────────────────────────────
+    document.querySelectorAll('.install-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const os = tab.dataset.os;
+        document.querySelectorAll('.install-tab').forEach(t => {
+          const active = t.dataset.os === os;
+          t.style.background = active ? 'var(--accent)' : 'transparent';
+          t.style.color = active ? '#fff' : 'var(--text2)';
+          t.style.borderColor = active ? 'var(--accent)' : 'var(--border)';
+        });
+        document.getElementById('steps-android').style.display = os === 'android' ? '' : 'none';
+        document.getElementById('steps-ios').style.display = os === 'ios' ? '' : 'none';
+      });
+    });
+
+    // ── Service Worker ────────────────────────────────────────────────────────
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>
