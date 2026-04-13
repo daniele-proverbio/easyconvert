@@ -1,31 +1,17 @@
-# Currency Converter — PWA
+# EasyConvert Currency Converter — PWA
 
 A simple, offline-capable Progressive Web App for currency conversion.
 
 ## Features
 
-- 📴 **Fully offline** — works without internet after first load
-- 💾 **Persistent rate** — saved exchange rate loads automatically on next visit
-- ⇄ **Swap currencies** — flip conversion direction with one tap
-- 🆕 **New rate** — clear and re-enter a new rate at any time
-- 📲 **Installable** — add to home screen on Android, iOS, and desktop
+- **Fully offline** — works without internet after first load
+- **Persistent rate** — saved exchange rate loads automatically on next visit
+- **Swap currencies** — flip conversion direction with one tap
+- **New rate** — clear and re-enter a new rate at any time
+- **Installable** — add to home screen on Android, iOS, and desktop
 
-## Deploy to GitHub Pages
-
-1. **Fork or upload** this folder to a new GitHub repository.
-
-2. Go to **Settings → Pages** in your repository.
-
-3. Under **Source**, choose:
-   - Branch: `main` (or `master`)
-   - Folder: `/ (root)`
-
-4. Click **Save**. Your app will be live at:
-   ```
-   https://<your-username>.github.io/<repo-name>/
-   ```
-
-5. That's it! Share the URL — users can open it in any browser and install it as an app.
+## Access and Install
+Go to daniele-proverbio.github.io/easyconvert and Install on your home screen. Look up for "Info" for installation instructions. 
 
 ## File structure
 
@@ -52,5 +38,3 @@ A simple, offline-capable Progressive Web App for currency conversion.
 - All data is stored in `localStorage` on the user's device.
 
 ---
-
-Developed by Daniele Proverbio, 2026
